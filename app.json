@@ -1,0 +1,80 @@
+{
+  "id": "com.wemo",
+  "version": "0.1.0",
+  "compatibility": "0.x || 1.x",
+  "name": {
+    "en": "WeMo",
+    "nl": "WeMo"
+  },
+  "description": {
+    "en": "Connect your WeMo switches and sensors with Homey",
+    "nl": "Verbind je WeMo schakelaars en sensoren met Homey"
+  },
+  "author": {
+    "name": "Freek Boelders",
+    "website": "http://www.freekboelders.nl"
+  },
+  "images": {},
+  "drivers": [
+    {
+      "id": "socket",
+      "name": {
+        "en": "Belkin WeMo socket"
+      },
+      "class": "socket",
+      "capabilities": [ "onoff" ],
+      "pair": [
+        {
+          "id": "search"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_stations"
+          }
+        },
+        {
+          "id": "add_stations",
+          "template": "add_devices"
+        }
+      ]
+    },
+    {
+      "id": "sensor",
+      "name": {
+        "en": "Belkin WeMo motion sensor"
+      },
+      "class": "sensor",
+      "capabilities": [ "alarm_motion" ],
+      "pair": [
+        {
+          "id": "search"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_stations"
+          }
+        },
+        {
+          "id": "add_stations",
+          "template": "add_devices"
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "node-ssdp": "*",
+    "wemo": "*",
+    "request": "*",
+    "extend": "*"
+  },
+  "permissions": [
+    "homey:manager:speech-output",
+    "homey:manager:speech-input"
+  ],
+  "speech": [
+  ]
+}
