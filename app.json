@@ -1,10 +1,11 @@
 {
   "id": "com.wemo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "compatibility": "0.x || 1.x",
+  "category": "appliances",
   "name": {
-    "en": "WeMo",
-    "nl": "WeMo"
+    "en": "Belkin WeMo",
+    "nl": "Belkin WeMo"
   },
   "description": {
     "en": "Connect your WeMo switches and sensors with Homey",
@@ -14,12 +15,19 @@
     "name": "Freek Boelders",
     "website": "http://www.freekboelders.nl"
   },
-  "images": {},
+  "images": {
+    "large": "./assets/images/large.jpg",
+    "small": "./assets/images/small.jpg"
+  },
   "drivers": [
     {
       "id": "socket",
       "name": {
         "en": "Belkin WeMo socket"
+      },
+      "images": {
+        "large": "./drivers/socket/assets/images/large.jpg",
+        "small": "./drivers/socket/assets/images/small.jpg"
       },
       "class": "socket",
       "capabilities": [ "onoff" ],
@@ -44,6 +52,10 @@
       "id": "sensor",
       "name": {
         "en": "Belkin WeMo motion sensor"
+      },
+      "images": {
+        "large": "./drivers/sensor/assets/images/large.jpg",
+        "small": "./drivers/sensor/assets/images/small.jpg"
       },
       "class": "sensor",
       "capabilities": [ "alarm_motion" ],

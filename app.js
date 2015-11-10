@@ -1,6 +1,5 @@
 //TO DO:
 //Fix issue switching ports of WeMo
-//Retry when not found
 
 "use strict";
 
@@ -15,8 +14,8 @@ var http 			= require('http');
 var WeMo 			= new require('wemo')
 var device          = {};
 
-var ports			= [49153]
-//var ports 			= [49152, 49153, 49154, 49155];
+//var ports			= [49153]
+var ports 			= [49152, 49153, 49154, 49155];
 
 var local_ip; //Homeys local IP
 var listen_port; //Homeys port where we can listen to events send by the sensor
@@ -25,8 +24,7 @@ var self = {
 	init: function () {
 		Homey.log("WeMo app started");
 
-        //Homey.app.discover();
-
+        Homey.app.discover();
         //Homey.app.listen_event();
 
 		self.foundEmitter	= new Emitter(); //used when device is found by discover
@@ -35,16 +33,20 @@ var self = {
 
 	getState: function ( device, callback) {
 		Homey.log("Getting the state");
+		Homey.log("device", device);
 
-		ports.forEach(function(port) { //Try the ports that are listed in the port array
-			var wemoSwitch = new WeMo(device.ip, port); //Fill in the IP and port which is found during discovery
-			wemoSwitch.getBinaryState(function(err, result) {
-	        	if (err) Homey.error(err);
-	        	Homey.log(result); // 1
-	        	if (result == 1) callback(true);
-	        	if (result == 0) callback(false);
-	    	});
-		})
+		if (device != null) {
+			ports.forEach(function(port) { //Try the ports that are listed in the port array
+				var wemoSwitch = new WeMo(device.ip, port); //Fill in the IP and port which is found during discovery
+				wemoSwitch.getBinaryState(function(err, result) {
+		        	if (err) Homey.error(err);
+		        	Homey.log(result); // 1
+		        	//if (result == 1) callback(true);
+		        	//if (result == 0) callback(false);
+		        	callback(result);
+		    	});
+			})
+		}
 	},
 
 	setState: function ( device, state, callback) {
@@ -65,7 +67,8 @@ var self = {
 				    wemoSwitch.getBinaryState(function(err, result) {
 				        if (err) console.error(err);
 				        Homey.log("result3: " + result); // 1
-				        if (result == 1 || 0) callback(result);
+				        if (state == 1) callback(true);
+	        			if (state == 0) callback(false);
 				    });
 				});
 	    	});
@@ -76,6 +79,7 @@ var self = {
 		Homey.log("Starting with discovering devices");
 		Homey.log (local_ip, listen_port);
 
+		var again			= 0;
 		var foundSocket 	= {};
 		var foundSensor 	= {};
 
@@ -95,7 +99,7 @@ var self = {
 			  		console.log("It is a Sensor");
 
 			  		foundSensor[ uuid ] = {
-						"name": "Belkin WeMo Motion Sensor",
+						"name": "WeMo Motion Sensor",
 						"uuid": uuid,
 						"ip": rinfo.address,
 					};
@@ -109,18 +113,27 @@ var self = {
 			  	if (uuid.indexOf("Socket") > 0){ //If found a Socket
 			  		console.log("It is a Socket");
 
-			  		foundSensor[ uuid ] = {
-						"name": "Belkin WeMo Motion Socket",
+			  		foundSocket [ uuid ] = {
+						"name": "WeMo Socket",
 						"uuid": uuid,
 						"ip": rinfo.address,
 					};
-					console.log(foundSensor);
+					console.log(foundSocket);
 
 			  		self.foundEmitter.emit('foundSocket', foundSocket)
 			  	}
 		  	}
 
 		});
+
+		var timerId = setInterval(function() { 
+			client.search('urn:Belkin:service:basicevent:1');
+		    again++;
+
+			if (again == 3) { //run 3 times
+				clearTimeout(timerId);
+			}
+		}, 5000) //every 5 sec
 
 		client.search('urn:Belkin:service:basicevent:1'); //Search now
 		//client.search('ssdp:all'); //Search now
@@ -190,9 +203,9 @@ var self = {
 		app.use(bodyparser.raw({type: 'text/xml'}));
 
         app.all('/', function(req, res) {
-        	console.log("HEADERS: %j", req.headers);
-        	console.log("BODY: %j", req.body);
-        	console.log("SID: %j", req.headers.sid);
+        	//console.log("HEADERS: %j", req.headers);
+        	//console.log("BODY: %j", req.body);
+        	//console.log("SID: %j", req.headers.sid);
 
         	var sid = req.headers.sid
 
@@ -201,11 +214,11 @@ var self = {
 					console.log(err);
 				}
 				
-				console.log("EVENT: %j" , json);
+				//console.log("EVENT: %j" , json);
 
 				if (json['e:propertyset']['e:property'][0]['BinaryState'][0]) { //Find the BinaryState
 					var state = json['e:propertyset']['e:property'][0]['BinaryState'][0];
-					Homey.log("STATE: %j", state);
+					//Homey.log("STATE: %j", state);
 					if (state == 1) self.stateEmitter.emit('new_state', true, sid); //Emit the state
 	        		if (state == 0) self.stateEmitter.emit('new_state', false, sid); //Emit the state
 				}

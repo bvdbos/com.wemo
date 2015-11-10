@@ -19,9 +19,6 @@ var self = {
 	init: function( devices, callback ){ // we're ready
 		Homey.log("The driver of Wemo Sensor started");
 
-		Homey.app.discover(); //Start discovering devices
-		//setInterval( function() {Homey.app.findEndDevices();}, 5000)
-
 		Homey.app.listen_event(); //Start listening to incoming events
 
 		Homey.log('devices', devices);
@@ -48,6 +45,9 @@ var self = {
 						Homey.app.stateEmitter.on('new_state', function (state, sid) {
 							Homey.log("Found a new state", state);
 							Homey.log("For the device with this sid:", sid);
+
+							Homey.log('realtime', state);
+							Homey.log('device', device);
 
 							module.exports.realtime( device, 'alarm_motion', state );
 						});
@@ -88,6 +88,7 @@ var self = {
 			Homey.app.foundEmitter.on('foundSensor', function(foundDevices){
 				Homey.log("FoundDevices: " + foundDevices);
 				pairingDevices = foundDevices;
+				//clearInterval(interval); //Clear the repeat interfal to stop discovering
 				callback(foundDevices);
 			})
 		},

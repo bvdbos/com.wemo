@@ -16,7 +16,7 @@ var pairingDevices	= {};
 		
 var self = {
 	
-	init: function( devices_data_objects, callback ){ // we're ready
+	init: function( devices, callback ){ // we're ready
 		Homey.log("The driver of Wemo Socket started");
 
 		/*Homey.app.discover(); //Start discovering devices
@@ -55,7 +55,9 @@ var self = {
 			},
 			set: function( device, state, callback ){
 				Homey.app.setState(device, state, function(state) {
-					self.realtime(device, 'onoff', state)  //Send realtime the new state
+					Homey.log('realtime', state);
+					Homey.log('device', device);
+					module.exports.realtime( device, 'onoff', state );
 					callback(state) //New state
 				});
 			}
@@ -92,10 +94,10 @@ var self = {
 				})
 			}
 
-			devices[ pairingDevices[pairingDevice].id ] = {
+			/*devices[ pairingDevices[pairingDevice].id ] = {
 				"name": pairingDevices[pairingDevice].name,
 				"ip": pairingDevices[pairingDevice].ip,
-			}
+			}*/
 
 			callback( devices_list );
 			
