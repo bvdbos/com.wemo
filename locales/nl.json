@@ -1,7 +1,15 @@
 {
 	"pair": {
 		"search": {
-			"title": "Searching for Wemo devices"
+			"sensor": {
+				"title": "Naar Wemo sensors aan het zoeken"
+			},
+			"socket": {
+				"title": "Naar Wemo stopcontacten aan het zoeken"
+			}
 		}
+	},
+	"error": {
+		"unavailable": "Dit apparaat is op het moment niet beschikbaar"
 	}
 }

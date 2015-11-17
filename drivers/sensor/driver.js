@@ -6,11 +6,11 @@ var pairingDevices	= {};
 
 //var devices contains:
 /*var devices 		= {
-	"uuid:sdsdfsdds": { //uuid
-		"name": blasdf,
+	"uuid:fooUuid": { //uuid
+		"name": fooName,
 		"ip": 255.255.255.255,
 		"port": 1234,
-		"state": 
+		"state": 0
 	}
 }*/
 		
@@ -19,39 +19,28 @@ var self = {
 	init: function( devices, callback ){ // we're ready
 		Homey.log("The driver of Wemo Sensor started");
 
-		Homey.app.listen_event(); //Start listening to incoming events
+		//Homey.app.listen_event(); //Start listening to incoming events
 
-		Homey.log('devices', devices);
-
-		Homey.app.foundEmitter.on('foundSensor', function (foundDevices){
-			Homey.log("FoundDevices: " + foundDevices);
+		Homey.app.foundEmitter.on('foundSensor', function (foundDevices){ //When a sensor is found
+			
 			devices.forEach(function(device){ //Loopt trough all registered devices
+
 				for( var foundDevice in foundDevices ) { } //Create foundDevice to get the uuid
-					Homey.log("New device added1, this is now the list:", devices)
-					if (device.id == foundDevices[foundDevice].uuid) {
-						//getState(device, function(state) { //Get state
-							devices[ device.id ] = {
-								"name": device.name,
-								"ip": device.ip
-							}
-						//});
 
-						Homey.log("New device added2, this is now the list:", devices)
+				if (device.id == foundDevices[foundDevice].uuid) {
+					
+					devices[ device.id ] = {
+						"name": device.name,
+						"ip": device.ip,
+						"port": device.port
+					}
 
-						Homey.app.getState(); //Start checking the state of the sensor
+					Homey.app.stateEmitter.on('new_state', function (state, sid) {
+						Homey.log("Found a new state", state);
 
-						Homey.log("New device added3, this is now the list:", devices)
-
-						Homey.app.stateEmitter.on('new_state', function (state, sid) {
-							Homey.log("Found a new state", state);
-							Homey.log("For the device with this sid:", sid);
-
-							Homey.log('realtime', state);
-							Homey.log('device', device);
-
-							module.exports.realtime( device, 'alarm_motion', state );
-						});
-					};
+						module.exports.realtime( device, 'alarm_motion', state ); //Emit the states realtime to Homey
+					});
+				};
 			});
 
 		});
@@ -59,19 +48,14 @@ var self = {
 		callback();
 	},
 	
-	name: {
-		set: function( device, name, callback ) {
-			// A Wemo device does not have a name
-		}
-	},
-	
 	capabilities: {
 		alarm_motion: {
 			get: function( device, callback ){
-				Homey.log("get alarm state");
+				Homey.log("getting sensor state");
+				if (callback == "time-out") module.exports.setUnavailable( device, __('error.unavailable'), callback );
 
 				Homey.app.getState(device, function(state) {
-					Homey.log('state', state);
+					Homey.log('get sensor state:', state);
 					callback(null, state);
 				});
 			}
@@ -88,7 +72,6 @@ var self = {
 			Homey.app.foundEmitter.on('foundSensor', function(foundDevices){
 				Homey.log("FoundDevices: " + foundDevices);
 				pairingDevices = foundDevices;
-				//clearInterval(interval); //Clear the repeat interfal to stop discovering
 				callback(foundDevices);
 			})
 		},
@@ -105,6 +88,7 @@ var self = {
 						id: pairingDevices[pairingDevice].uuid, //'id' is the same as 'uuid'
 						name: pairingDevices[pairingDevice].name,
 						ip: pairingDevices[pairingDevice].ip,
+						port: pairingDevices[pairingDevice].port
 					}
 				})
 			}
@@ -112,15 +96,12 @@ var self = {
 			devices[ pairingDevices[pairingDevice].id ] = {
 				"name": pairingDevices[pairingDevice].name,
 				"ip": pairingDevices[pairingDevice].ip,
+				"port": pairingDevices[pairingDevice].port
 			}
 
 			callback( devices_list );
 			
 			foundDevices = {};
-		},
-
-		add_device: function( callback, emit, data ) {
-			//
 		},
 	}
 	

@@ -6,11 +6,11 @@ var pairingDevices	= {};
 
 //var devices contains:
 /*var devices 		= {
-	"uuid:sdsdfsdds": { //uuid
-		"name": blasdf,
+	"uuid:fooUuid": { //uuid
+		"name": fooName,
 		"ip": 255.255.255.255,
 		"port": 1234,
-		"state": 
+		"state": 0
 	}
 }*/
 		
@@ -19,44 +19,25 @@ var self = {
 	init: function( devices, callback ){ // we're ready
 		Homey.log("The driver of Wemo Socket started");
 
-		/*Homey.app.discover(); //Start discovering devices
-
-		Homey.app.foundEmitter.on('foundSocket', function(foundDevices){
-			devices_data_objects.forEach(function(devices_data_object){ //Loopt trough all registered devices
-				for( var foundDevice in foundDevices ) { } //Create foundDevice to get the uuid
-					if (devices_data_object.id == foundDevices[foundDevice].uuid) {
-						//getState(devices_data_object, function(state) { //Get state
-							devices[ devices_data_object.id ] = {
-								"name": devices_data_object.name,
-								"ip": devices_data_object.ip
-							}
-						//});
-						Homey.log("New device added, this is now the list:", devices)
-					};
-			});
-
-		}); */
-
 		callback();
-	},
-	
-	name: {
-		set: function( device, name, callback ) {
-			// A Wemo device does not have a name
-		}
 	},
 	
 	capabilities: {
 		onoff: {
 			get: function( device, callback) {
+				Homey.log("getting socket state");
+
 				Homey.app.getState(device, function(state) {
+					Homey.log('device', device);
+					if (state == "time-out") Homey.log("Foo");
+					if (state == "time-out") module.exports.setUnavailable( device, __('error.unavailable'), callback );
 					callback(state)
 				});
 			},
 			set: function( device, state, callback ){
+				Homey.log("setting socket state");
 				Homey.app.setState(device, state, function(state) {
-					Homey.log('realtime', state);
-					Homey.log('device', device);
+					Homey.log('Set state:', state);
 					module.exports.realtime( device, 'onoff', state );
 					callback(state) //New state
 				});
@@ -90,23 +71,21 @@ var self = {
 						id: pairingDevices[pairingDevice].uuid, //'id' is the same as 'uuid'
 						name: pairingDevices[pairingDevice].name,
 						ip: pairingDevices[pairingDevice].ip,
+						port: pairingDevices[pairingDevice].port
 					}
 				})
 			}
 
-			/*devices[ pairingDevices[pairingDevice].id ] = {
+			devices[ pairingDevices[pairingDevice].id ] = {
 				"name": pairingDevices[pairingDevice].name,
 				"ip": pairingDevices[pairingDevice].ip,
-			}*/
+				"port": pairingDevices[pairingDevice].port
+			}
 
 			callback( devices_list );
 			
 			foundDevices = {};
-		},
-
-		add_device: function( callback, emit, data ) {
-			//
-		},
+		}
 	}
 	
 }
