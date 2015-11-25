@@ -1,6 +1,3 @@
-//TO DO:
-//Make device available and unavailable using 'net-ping'
-
 "use strict";
 
 var Express 		= require('express');
@@ -11,10 +8,12 @@ var bodyparser 		= require('body-parser');
 var url 			= require('url');
 var request 		= require('request');
 var http 			= require('http');
-var WeMo 			= new require('wemo')
+var WeMo 			= new require('wemo');
+var tcpp 			= require('tcp-ping');
 var device          = {};
 var possiblePorts 	= [49152, 49153, 49154, 49155]; //Most common port: 49153
 
+var lock = false;
 var local_ip; //Homeys local IP
 var listen_port; //Homeys port where we can listen to events send by the sensor
 
@@ -22,7 +21,7 @@ var self = {
 	init: function () {
 		Homey.log("WeMo app started");
 
-        Homey.app.discover(); //Start discovering all the devices
+		Homey.app.discover(); //Start discovering all the devices
 
 		self.foundEmitter	= new Emitter(); //used when device is found by discover
 		self.stateEmitter	= new Emitter(); //used when state of the device is changed
@@ -33,9 +32,9 @@ var self = {
 		Homey.log(device);
 
 		var ports;
-		var errors = 0;
 
 		if (device != null) {
+
 			if (device.tryAgain != true) ports = [device.port]; //First try with 1 port
 			else ports = possiblePorts; //if second try --> use multiple ports
 
@@ -46,7 +45,13 @@ var self = {
 				wemoSwitch.getBinaryState(function(err, result) {
 		        	if (err) {
 		        		Homey.log(err);
+
 		        		if (device.tryAgain != true) { //Try again with all possible ports
+		        			setTimeout(function(){ //After 3 seconds callback "time-out"
+								console.log(callback);
+								callback("time-out");	
+							}, 3 * 1000); //3 sec
+
 		        			Homey.app.getState({'id': device.id, 'name': device.name, 'ip': device.ip, 'tryAgain': true});
 		        		}
 		        	} else {
@@ -137,12 +142,14 @@ var self = {
 
 		});
 
-		var timerId = setInterval(function() { 
+		var repeat = setInterval(function() { 
 			client.search('urn:Belkin:service:basicevent:1');
+		    
+		    lock = true;
 		    again++;
 
 			if (again == 3) { //run 3 times
-				clearTimeout(timerId);
+				clearTimeout(repeat);
 			}
 		}, 5000) //every 5 sec
 
@@ -260,6 +267,31 @@ var self = {
 				Homey.app.findfreeport();
 			}
 		})
+	},
+
+	check_availability: function (device, callback){
+		Homey.app.ping(device.ip, function (available) { //Ping the device, to check availability
+			if (available == false) { 
+				callback(false);
+
+				var pingInterval = setInterval( Homey.app.ping, 1000 * 60, device.ip, function (available) { //Ping again every minute
+					if (available == true) {
+						callback(true);
+						clearInterval(pingInterval); //Stop ping when found
+						Homey.app.discover(); //Start discovering for this new device so it will get subscribed to the events
+					}
+				});
+			}
+
+			if (available == true) callback(true);
+		});
+	},
+
+	ping: function (ip, callback) {
+		tcpp.probe(ip, 49153, function(err, available) {
+		    console.log(available); //Contains true or false
+		    callback(available);
+		});
 	}
 }
 

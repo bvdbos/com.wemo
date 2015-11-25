@@ -19,8 +19,18 @@ var self = {
 	init: function( devices, callback ){ // we're ready
 		Homey.log("The driver of Wemo Sensor started");
 
-		//Homey.app.listen_event(); //Start listening to incoming events
+		// Check if all devices are available
+		if (devices != null) {
+			devices.forEach(function(device){
+				Homey.log(device);
+				Homey.app.check_availability(device, function(available) {
+					if (available == true) module.exports.setAvailable( device, callback );
+					if (available == false) module.exports.setUnavailable( device, __('error.unavailable'), callback );
+				});
+			});
+		}
 
+		//When a device is found
 		Homey.app.foundEmitter.on('foundSensor', function (foundDevices){ //When a sensor is found
 			
 			devices.forEach(function(device){ //Loopt trough all registered devices
@@ -52,10 +62,16 @@ var self = {
 		alarm_motion: {
 			get: function( device, callback ){
 				Homey.log("getting sensor state");
-				if (callback == "time-out") module.exports.setUnavailable( device, __('error.unavailable'), callback );
 
 				Homey.app.getState(device, function(state) {
-					Homey.log('get sensor state:', state);
+					if (state == "time-out") {
+						module.exports.setUnavailable( device, __('error.unavailable'), callback );
+
+						Homey.app.check_availability(device, function(available) { //Start checking the availability
+							if (available == true) module.exports.setAvailable( device, callback );
+							if (available == false) module.exports.setUnavailable( device, __('error.unavailable'), callback );
+						});
+					}
 					callback(null, state);
 				});
 			}
@@ -98,6 +114,13 @@ var self = {
 				"ip": pairingDevices[pairingDevice].ip,
 				"port": pairingDevices[pairingDevice].port
 			}
+
+			devices_list.forEach(function(device){ //Get the device
+				Homey.app.stateEmitter.on('new_state', function (state, sid) { //Start listening to events
+					Homey.log("Found a new state", state);
+					module.exports.realtime( device, 'alarm_motion', state ); //Emit the states realtime to Homey
+				});
+			});
 
 			callback( devices_list );
 			

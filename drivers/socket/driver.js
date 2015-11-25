@@ -19,6 +19,29 @@ var self = {
 	init: function( devices, callback ){ // we're ready
 		Homey.log("The driver of Wemo Socket started");
 
+		// Check if all devices are available 
+		if (devices != null) {
+			devices.forEach(function(device){
+				Homey.log(device);
+
+				Homey.app.ping(device.ip, function (available) { //Ping the device, to check availability
+					if (available == false) { 
+						module.exports.setUnavailable( device, __('error.unavailable'), callback );
+
+						var pingInterval = setInterval( Homey.app.ping, 1000 * 60, device.ip, function (available) { //Ping again every minute
+							if (available == true) {
+								module.exports.setAvailable( device, callback );
+								clearInterval(pingInterval); //Stop ping when found
+								Homey.app.discover(); //Start discovering for this new device so it will get subscribed to the events
+							}
+						});
+					}
+
+					if (available == true) module.exports.setAvailable( device, callback );
+				});
+			});
+		}
+
 		callback();
 	},
 	
@@ -28,10 +51,15 @@ var self = {
 				Homey.log("getting socket state");
 
 				Homey.app.getState(device, function(state) {
-					Homey.log('device', device);
-					if (state == "time-out") Homey.log("Foo");
-					if (state == "time-out") module.exports.setUnavailable( device, __('error.unavailable'), callback );
-					callback(state)
+					if (state == "time-out") {
+						module.exports.setUnavailable( device, __('error.unavailable'), callback );
+						
+						Homey.app.check_availability(device, function(available) { //Start checking the availability
+							if (available == true) module.exports.setAvailable( device, callback );
+							if (available == false) module.exports.setUnavailable( device, __('error.unavailable'), callback );
+						});
+					}
+					callback(null, state);
 				});
 			},
 			set: function( device, state, callback ){
