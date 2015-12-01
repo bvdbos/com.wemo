@@ -45,6 +45,8 @@ var self = {
 						"port": device.port
 					}
 
+					module.exports.setAvailable( device, callback ); //Set device available
+
 					Homey.app.stateEmitter.on('new_state', function (state, sid) {
 						Homey.log("Found a new state", state);
 
@@ -78,8 +80,8 @@ var self = {
 		}
 	},
 	
-	pair: {
-		search: function( callback, emit, data ){
+	pair: function( socket ) {
+		socket.on( "search", function( data, callback ){
 			Homey.log('Wemo pairing has started');
 			Homey.log('Searching for devices');
 
@@ -88,11 +90,15 @@ var self = {
 			Homey.app.foundEmitter.on('foundSensor', function(foundDevices){
 				Homey.log("FoundDevices: " + foundDevices);
 				pairingDevices = foundDevices;
-				callback(foundDevices);
+				callback(null, foundDevices);
 			})
-		},
+
+			/*var repeat = setTimeout(function() { 
+			callback(false, "no-devices");
+			}, 20000) //every 5 sec*/
+		}),
 		
-		list_devices: function( callback, emit, data) {
+		socket.on( "list_devices", function( data, callback ){
 			Homey.log("List devices");
 
 			var devices_list = [];
@@ -122,10 +128,10 @@ var self = {
 				});
 			});
 
-			callback( devices_list );
+			callback( null, devices_list );
 			
 			foundDevices = {};
-		},
+		})
 	}
 	
 }

@@ -42,6 +42,27 @@ var self = {
 			});
 		}
 
+		//When a device is found
+		Homey.app.foundEmitter.on('foundSocket', function (foundDevices){ //When a sensor is found
+			
+			devices.forEach(function(device){ //Loopt trough all registered devices
+
+				for( var foundDevice in foundDevices ) { } //Create foundDevice to get the uuid
+
+				if (device.id == foundDevices[foundDevice].uuid) {
+					
+					devices[ device.id ] = {
+						"name": device.name,
+						"ip": device.ip,
+						"port": device.port
+					}
+
+					module.exports.setAvailable( device, callback ); //Set device available
+				};
+			});
+
+		});
+
 		callback();
 	},
 	
@@ -73,8 +94,8 @@ var self = {
 		}
 	},
 	
-	pair: {
-		search: function( callback, emit, data ){
+	pair: function( socket ) {
+		socket.on( "search", function( data, callback ){
 			Homey.log('Wemo pairing has started');
 			Homey.log('Searching for devices');
 
@@ -83,11 +104,11 @@ var self = {
 			Homey.app.foundEmitter.on('foundSocket', function(foundDevices){
 				Homey.log("FoundDevices: " + foundDevices);
 				pairingDevices = foundDevices;
-				callback(foundDevices);
+				callback( null, foundDevices );
 			})
-		},
+		}),
 		
-		list_devices: function( callback, emit, data) {
+		socket.on( "list_devices", function( data, callback ){
 			Homey.log("List devices");
 
 			var devices_list = [];
@@ -110,10 +131,10 @@ var self = {
 				"port": pairingDevices[pairingDevice].port
 			}
 
-			callback( devices_list );
+			callback( null, devices_list );
 			
 			foundDevices = {};
-		}
+		})
 	}
 	
 }
