@@ -88,7 +88,7 @@ var self = {
 				Homey.app.setState(device, state, function(state) {
 					Homey.log('Set state:', state);
 					module.exports.realtime( device, 'onoff', state );
-					callback(state) //New state
+					callback(null, state) //New state
 				});
 			}
 		}
