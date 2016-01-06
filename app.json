@@ -1,6 +1,6 @@
 {
   "id": "com.wemo",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "compatibility": "0.x || 1.x",
   "category": "appliances",
   "name": {
@@ -12,8 +12,7 @@
     "nl": "Verbind je WeMo schakelaars en sensoren met Homey"
   },
   "author": {
-    "name": "Freek Boelders",
-    "website": "http://www.freekboelders.nl"
+    "name": "Athom B.V."
   },
   "images": {
     "large": "./assets/images/large.jpg",
