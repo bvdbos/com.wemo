@@ -149,7 +149,7 @@ var self = {
 		    again++;
 
 			if (again == 3) { //run 3 times
-				clearTimeout(repeat);
+				clearInterval(repeat);
 			}
 		}, 5000) //every 5 sec
 
