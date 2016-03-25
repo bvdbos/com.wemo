@@ -66,9 +66,16 @@
           "id": "list_devices",
           "template": "list_devices",
           "navigation": {
-            "next": "add_stations"
+            "next": "choose_slave"
           }
         },
+        {
+          "id": "choose_slave",
+          "template": "choose_slave",
+          "navigation": {
+            "next": "add_stations"
+          }
+        }
         {
           "id": "add_stations",
           "template": "add_devices"
