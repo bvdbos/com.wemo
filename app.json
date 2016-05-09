@@ -1,6 +1,6 @@
 {
   "id": "com.wemo",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "compatibility": "0.x || 1.x",
   "category": "appliances",
   "name": {
@@ -8,8 +8,8 @@
     "nl": "Belkin WeMo"
   },
   "description": {
-    "en": "Connect your WeMo switches and sensors with Homey",
-    "nl": "Verbind je WeMo schakelaars en sensoren met Homey"
+    "en": "Connect your Belkin WeMo devices with Homey",
+    "nl": "Verbind je Belkin WeMo apparaten met Homey"
   },
   "author": {
     "name": "Athom B.V."
@@ -22,18 +22,17 @@
     {
       "id": "socket",
       "name": {
-        "en": "Belkin WeMo socket"
+        "en": "Socket"
       },
       "images": {
         "large": "./drivers/socket/assets/images/large.jpg",
         "small": "./drivers/socket/assets/images/small.jpg"
       },
       "class": "socket",
-      "capabilities": [ "onoff" ],
+      "capabilities": [
+        "onoff"
+      ],
       "pair": [
-        {
-          "id": "search"
-        },
         {
           "id": "list_devices",
           "template": "list_devices",
@@ -50,49 +49,112 @@
     {
       "id": "sensor",
       "name": {
-        "en": "Belkin WeMo motion sensor"
+        "en": "Motion Sensor"
       },
       "images": {
         "large": "./drivers/sensor/assets/images/large.jpg",
         "small": "./drivers/sensor/assets/images/small.jpg"
       },
       "class": "sensor",
-      "capabilities": [ "alarm_motion" ],
+      "capabilities": [
+        "alarm_motion"
+      ],
       "pair": [
-        {
-          "id": "search"
-        },
         {
           "id": "list_devices",
           "template": "list_devices",
           "navigation": {
-            "next": "choose_slave"
+            "next": "add_stations"
           }
         },
         {
-          "id": "choose_slave",
-          "template": "choose_slave",
+          "id": "add_stations",
+          "template": "add_devices"
+        }
+      ]
+    },
+    {
+      "id": "insight",
+      "name": {
+        "en": "Insights"
+      },
+      "images": {
+        "large": "./drivers/insight/assets/images/large.jpg",
+        "small": "./drivers/insight/assets/images/small.jpg"
+      },
+      "class": "socket",
+      "capabilities": [
+        "onoff",
+        "measure_power"
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
           "navigation": {
             "next": "add_stations"
           }
+        },
+        {
+          "id": "add_stations",
+          "template": "add_devices"
         }
+      ]
+    },
+    {
+      "id": "switch",
+      "name": {
+        "en": "Switch"
+      },
+      "images": {
+        "large": "./drivers/switch/assets/images/large.jpg",
+        "small": "./drivers/switch/assets/images/small.jpg"
+      },
+      "class": "button",
+      "capabilities": [
+        "onoff"
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_stations"
+          }
+        },
+        {
+          "id": "add_stations",
+          "template": "add_devices"
+        }
+      ]
+    },
+    {
+      "id": "bulb",
+      "name": {
+        "en": "Bulbs"
+      },
+      "images": {
+        "large": "./drivers/bulb/assets/images/large.jpg",
+        "small": "./drivers/bulb/assets/images/small.jpg"
+      },
+      "class": "light",
+      "capabilities": [
+        "onoff",
+        "dim"
+      ],
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_stations"
+          }
+        },
         {
           "id": "add_stations",
           "template": "add_devices"
         }
       ]
     }
-  ],
-  "dependencies": {
-    "node-ssdp": "*",
-    "wemo": "*",
-    "request": "*",
-    "extend": "*"
-  },
-  "permissions": [
-    "homey:manager:speech-output",
-    "homey:manager:speech-input"
-  ],
-  "speech": [
   ]
 }

@@ -1,15 +1,5 @@
 {
-	"pair": {
-		"search": {
-			"sensor": {
-				"title": "Searching for Wemo sensors"
-			},
-			"socket": {
-				"title": "Searching for Wemo sockets"
-			}
-		}
-	},
 	"error": {
-		"unavailable": "This device can not be reached at the moment"
+		"offline": "This device can not be reached at the moment"
 	}
 }

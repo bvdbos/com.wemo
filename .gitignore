@@ -1,0 +1,3 @@
+
+# Exclude jetbrains config files
+.idea
