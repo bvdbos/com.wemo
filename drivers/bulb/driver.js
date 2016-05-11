@@ -64,7 +64,10 @@ function pair(socket) {
       client.getEndDevices((err, endDevices) => {
         if (!err && endDevices) {
           devices = endDevices
-            .filter(endDevice => !getEndDevice({ UDN: client.UDN, deviceId: endDevice.deviceId }))
+            .filter(endDevice => endDevice.deviceType === 'dimmableLight' && !getEndDevice({
+              UDN: client.UDN,
+              deviceId: endDevice.deviceId
+            }))
             .map(endDevice => getDeviceObject(endDevice, client.UDN));
           if (devices.length) {
             clearTimeout(noDeviceTimeout);
@@ -80,7 +83,10 @@ function pair(socket) {
       const client = Homey.app.wemo.client(deviceInfo);
       client.getEndDevices((err, endDevices) => {
         devices = endDevices
-          .filter(endDevice => !getEndDevice({ UDN: client.UDN, deviceId: endDevice.deviceId }))
+          .filter(endDevice => endDevice.deviceType === 'dimmableLight' && !getEndDevice({
+            UDN: client.UDN,
+            deviceId: endDevice.deviceId
+          }))
           .map(endDevice => getDeviceObject(endDevice, client.UDN));
         if (devices.length) {
           clearTimeout(noDeviceTimeout);
@@ -120,21 +126,25 @@ function pair(socket) {
 
 function getOnOff(deviceInfo, callback) {
   waitForDevice(deviceInfo).then(device => {
-    device.getDeviceStatus(deviceInfo.deviceId, (err, result) => {
-      if (err || result['10006'] === '') {
-        const self = this || {};
-        Homey.app.retry.call(
-          self,
-          err => {
-            disconnect(deviceInfo);
-            callback(err);
-          },
-          getOnOff.bind(self, deviceInfo, callback)
-        );
-      } else {
-        callback(err, result['10006'] !== '0')
-      }
-    });
+    if (!(this && this.forceUpdate) && (device.status && device.status['10006'])) {
+      callback(null, device.status['10006'] !== '0');
+    } else {
+      device.getDeviceStatus(deviceInfo.deviceId, (err, result) => {
+        if (err || result['10006'] === '') {
+          const self = this || {};
+          Homey.app.retry.call(
+            self,
+            err => {
+              disconnect(deviceInfo);
+              callback(err);
+            },
+            getOnOff.bind(self, deviceInfo, callback)
+          );
+        } else {
+          callback(err, result['10006'] !== '0');
+        }
+      });
+    }
   }).catch(err => callback(err));
 }
 
@@ -144,7 +154,7 @@ function setOnOff(deviceInfo, state, callback) {
       deviceInfo.deviceId,
       state ? 10008 : 10006,  // Because of a bug in the belkin bulbs we set the brightness value to turn on them on
       state ?
-        device.status ? device.status['10008'].split(':')[0] + ':0' || '255:0' : '255:0' :
+        device.status && device.status['10008'] ? device.status['10008'].split(':')[0] + ':0' || '255:0' : '255:0' :
         '0',
       err => {
         if (err) {
@@ -158,6 +168,9 @@ function setOnOff(deviceInfo, state, callback) {
             setOnOff.bind(self, deviceInfo, state, callback)
           );
         } else {
+          if (Homey.app.dedupeUpdate(device, '10006', state ? '1' : '0')) {
+            module.exports.realtime(deviceInfo, 'onoff', state);
+          }
           callback(null, state);
         }
       }
@@ -199,6 +212,9 @@ function setDim(deviceInfo, state, callback) {
           setDim.bind(self, deviceInfo, state, callback)
         );
       } else {
+        if (Homey.app.dedupeUpdate(device, '10006', '1')) {
+          module.exports.realtime(deviceInfo, 'onoff', true);
+        }
         callback(null, state);
       }
     });
@@ -281,7 +297,7 @@ function checkEndDevices(device) {
       devices.forEach(endDevice => {
         const knownEndDevice = getEndDevice(Object.assign(endDevice, { UDN: device.UDN }));
         if (knownEndDevice) {
-          getOnOff(knownEndDevice, err => !err && module.exports.setAvailable(knownEndDevice));
+          getOnOff.call({ forceUpdate: true }, knownEndDevice, err => !err && module.exports.setAvailable(knownEndDevice));
         }
       });
     }

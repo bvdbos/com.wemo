@@ -55,13 +55,12 @@ function disconnect(device) {
 }
 
 function retry(callback, func) {
-  this.retries = this.retries && this.retries <= 3 ? this.retries : 0;
+  this.retries = this.retries !== undefined ? this.retries : 0;
   this.retries++;
   if (this.retries >= 3) {
     callback('Could not complete call to device');
     return false;
   } else if (this.retries === 2) {
-    // Homey.app.clients[deviceInfo.UDN] = null;
     setTimeout(func, 5100);
   } else {
     setTimeout(func, 500 * this.retries);
