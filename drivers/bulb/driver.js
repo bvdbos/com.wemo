@@ -45,7 +45,8 @@ function deleted(deviceInfo) {
 function pair(socket) {
   let listDeviceCallback;
   const noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 5000);
-  let newDevices = [];
+  const newDevices = [];
+  let foundDevices;
 
   const getDeviceObject = (deviceInfo, UDN) => {
     return {
@@ -63,15 +64,15 @@ function pair(socket) {
     if (client && client.deviceType === Homey.app.DEVICE_TYPE.Bridge) {
       client.getEndDevices((err, endDevices) => {
         if (!err && endDevices) {
-          devices = endDevices
+          foundDevices = endDevices
             .filter(endDevice => endDevice.deviceType === 'dimmableLight' && !getEndDevice({
               UDN: client.UDN,
               deviceId: endDevice.deviceId
             }))
             .map(endDevice => getDeviceObject(endDevice, client.UDN));
-          if (devices.length) {
+          if (foundDevices.length) {
             clearTimeout(noDeviceTimeout);
-            socket.emit('list_devices', devices);
+            socket.emit('list_devices', foundDevices);
           }
         }
       });
@@ -82,15 +83,15 @@ function pair(socket) {
     if (deviceInfo.deviceType === Homey.app.DEVICE_TYPE.Bridge) {
       const client = Homey.app.wemo.client(deviceInfo);
       client.getEndDevices((err, endDevices) => {
-        devices = endDevices
+        foundDevices = endDevices
           .filter(endDevice => endDevice.deviceType === 'dimmableLight' && !getEndDevice({
             UDN: client.UDN,
             deviceId: endDevice.deviceId
           }))
           .map(endDevice => getDeviceObject(endDevice, client.UDN));
-        if (devices.length) {
+        if (foundDevices.length) {
           clearTimeout(noDeviceTimeout);
-          socket.emit('list_devices', devices);
+          socket.emit('list_devices', foundDevices);
         }
       });
     }
@@ -126,8 +127,9 @@ function pair(socket) {
 
 function getOnOff(deviceInfo, callback) {
   waitForDevice(deviceInfo).then(device => {
-    if (!(this && this.forceUpdate) && (device.status && device.status['10006'])) {
-      callback(null, device.status['10006'] !== '0');
+    const endDevice = getEndDevice(deviceInfo);
+    if (!(this && this.forceUpdate) && (endDevice.status && endDevice.status['10006'])) {
+      callback(null, endDevice.status['10006'] !== '0');
     } else {
       device.getDeviceStatus(deviceInfo.deviceId, (err, result) => {
         if (err || result['10006'] === '') {
@@ -145,17 +147,20 @@ function getOnOff(deviceInfo, callback) {
         }
       });
     }
-  }).catch(err => callback(err));
+  }).catch(err => {
+    callback(err);
+  });
 }
 
 function setOnOff(deviceInfo, state, callback) {
   waitForDevice(deviceInfo).then(device => {
+    const endDevice = getEndDevice(deviceInfo);
     device.setDeviceStatus(
       deviceInfo.deviceId,
-      state ? 10008 : 10006,  // Because of a bug in the belkin bulbs we set the brightness value to turn on them on
-      state ?
-        device.status && device.status['10008'] ? device.status['10008'].split(':')[0] + ':0' || '255:0' : '255:0' :
-        '0',
+      state && endDevice.status && endDevice.status['10008'] ? 10008 : 10006,  // Because of a bug in the belkin bulbs we set the brightness value to turn on them on
+      state && endDevice.status && endDevice.status['10008'] ?
+        endDevice.status['10008'].split(':')[0] || 255 + ':0' :
+        state ? '1' : '0',
       err => {
         if (err) {
           const self = this || {};
@@ -168,14 +173,16 @@ function setOnOff(deviceInfo, state, callback) {
             setOnOff.bind(self, deviceInfo, state, callback)
           );
         } else {
-          if (Homey.app.dedupeUpdate(device, '10006', state ? '1' : '0')) {
+          if (Homey.app.dedupeUpdate(endDevice, '10006', state ? '1' : '0')) {
             module.exports.realtime(deviceInfo, 'onoff', state);
           }
           callback(null, state);
         }
       }
     );
-  }).catch(err => callback(err));
+  }).catch(err => {
+    callback(err);
+  });
 }
 
 function getDim(deviceInfo, callback) {
@@ -195,7 +202,9 @@ function getDim(deviceInfo, callback) {
         callback(err, result['10008'].split(':')[0] / 255)
       }
     });
-  }).catch(err => callback(err));
+  }).catch(err => {
+    callback(err);
+  });
 }
 
 function setDim(deviceInfo, state, callback) {
@@ -212,13 +221,16 @@ function setDim(deviceInfo, state, callback) {
           setDim.bind(self, deviceInfo, state, callback)
         );
       } else {
-        if (Homey.app.dedupeUpdate(device, '10006', '1')) {
+        const endDevice = getEndDevice(deviceInfo);
+        if (Homey.app.dedupeUpdate(endDevice, '10006', '1')) {
           module.exports.realtime(deviceInfo, 'onoff', true);
         }
         callback(null, state);
       }
     });
-  }).catch(err => callback(err));
+  }).catch(err => {
+    callback(err);
+  });
 }
 
 function waitForDevice(deviceInfo) {
@@ -252,7 +264,7 @@ function createConnection(deviceInfo) {
           connectionLostTimeout = setTimeout(() => {
             connectionLostTimeout = null;
             if (this._subscriptionCheckValue === null && device.callbackURL) { //Check if subscription is still null
-              disconnect(device);
+              Homey.app.disconnect(device);
               devices
                 .filter(knownDevice => knownDevice.UDN === device.UDN)
                 .forEach(knownDevice => disconnect(knownDevice));
@@ -271,13 +283,13 @@ function createConnection(deviceInfo) {
       const endDevice = getEndDevice({ UDN: device.UDN, deviceId });
       if (endDevice) {
         module.exports.setAvailable(endDevice);
-        if (capabilityId === '10006' && Homey.app.dedupeUpdate(device, capabilityId, value)) {
+        if (capabilityId === '10006' && Homey.app.dedupeUpdate(endDevice, capabilityId, value)) {
           module.exports.realtime(endDevice, 'onoff', value !== '0');
         } else if (capabilityId === '10008') {
-          if (Homey.app.dedupeUpdate(device, '10006', '1')) {
+          if (Homey.app.dedupeUpdate(endDevice, '10006', '1')) {
             module.exports.realtime(endDevice, 'onoff', true);
           }
-          if (Homey.app.dedupeUpdate(device, capabilityId, value)) {
+          if (Homey.app.dedupeUpdate(endDevice, capabilityId, value)) {
             module.exports.realtime(endDevice, 'dim', value.split(':')[0] / 255);
           }
         }

@@ -62,6 +62,7 @@ function pair(socket) {
 function getOnOff(deviceInfo, callback) {
   waitForDevice(deviceInfo).then(device => {
     device.getBinaryState((err, result) => {
+      console.log(err, result);
       if (err) {
         const self = this || {};
         Homey.app.retry.call(
@@ -75,7 +76,9 @@ function getOnOff(deviceInfo, callback) {
       }
       callback(err, result !== '0')
     });
-  })
+  }).catch(err => {
+    callback(err);
+  });
 }
 
 function setOnOff(deviceInfo, state, callback) {

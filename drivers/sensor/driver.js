@@ -70,12 +70,14 @@ function getState(deviceInfo, callback) {
             disconnect(deviceInfo);
             callback(err);
           },
-          getOnOff.bind(self, deviceInfo, callback)
+          getState.bind(self, deviceInfo, callback)
         );
       }
-      callback(err, result === '1')
+      callback(err, result !== '0')
     });
-  })
+  }).catch(err => {
+    callback(err);
+  });
 }
 
 function waitForDevice(deviceInfo) {
@@ -120,7 +122,7 @@ function createConnection(deviceInfo) {
 
     device.on('binaryState', value => {
       if (Homey.app.dedupeUpdate(device, 'alarm_motion', value)) {
-        module.exports.realtime(deviceInfo, 'alarm_motion', value === '1')
+        module.exports.realtime(deviceInfo, 'alarm_motion', value !== '0')
       }
     });
 

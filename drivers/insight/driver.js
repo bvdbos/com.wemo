@@ -76,7 +76,9 @@ function getOnOff(deviceInfo, callback) {
       }
       callback(err, result[0] !== '0')
     });
-  })
+  }).catch(err => {
+    callback(err);
+  });
 }
 
 function setOnOff(deviceInfo, state, callback) {
@@ -96,13 +98,17 @@ function setOnOff(deviceInfo, state, callback) {
         callback(null, result.BinaryState[0] !== '0');
       }
     });
+  }).catch(err => {
+    callback(err);
   });
 }
 
 function getPower(deviceInfo, callback) {
   waitForDevice(deviceInfo).then(device => {
     callback(null, device.lastPowerValue || 0);
-  })
+  }).catch(err => {
+    callback(err);
+  });
 }
 
 function waitForDevice(deviceInfo) {
