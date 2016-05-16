@@ -22,7 +22,8 @@
     {
       "id": "socket",
       "name": {
-        "en": "Socket"
+        "en": "Socket",
+        "nl": "Stopcontact"
       },
       "images": {
         "large": "./drivers/socket/assets/images/large.jpg",
@@ -49,7 +50,8 @@
     {
       "id": "sensor",
       "name": {
-        "en": "Motion Sensor"
+        "en": "Motion Sensor",
+        "nl": "Bewegingssensor"
       },
       "images": {
         "large": "./drivers/sensor/assets/images/large.jpg",
@@ -76,7 +78,8 @@
     {
       "id": "insight",
       "name": {
-        "en": "Insights"
+        "en": "Insights",
+        "nl": "Insights"
       },
       "images": {
         "large": "./drivers/insight/assets/images/large.jpg",
@@ -104,7 +107,8 @@
     {
       "id": "switch",
       "name": {
-        "en": "Switch"
+        "en": "Switch",
+        "nl": "Schakelaar"
       },
       "images": {
         "large": "./drivers/switch/assets/images/large.jpg",
@@ -131,7 +135,8 @@
     {
       "id": "bulb",
       "name": {
-        "en": "Bulbs"
+        "en": "Bulb",
+        "nl": "lamp"
       },
       "images": {
         "large": "./drivers/bulb/assets/images/large.jpg",
