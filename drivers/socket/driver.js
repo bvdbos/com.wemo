@@ -37,19 +37,25 @@ function deleted(deviceInfo) {
 
 function pair(socket) {
   let listDeviceCallback;
+  const foundUDNList = [];
   const noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 10000);
 
+  const discover = () => {
+    Homey.app.discover(deviceInfo => {
+      if (deviceInfo.deviceType === Homey.app.DEVICE_TYPE.Switch &&
+        devices.findIndex(knownDevice => knownDevice.UDN === deviceInfo.UDN) === -1 &&
+        foundUDNList.indexOf(deviceInfo.UDN) === -1
+      ) {
+        clearTimeout(noDeviceTimeout);
+        foundUDNList.push(deviceInfo.UDN);
+        socket.emit('list_devices', [{ name: deviceInfo.friendlyName, data: { id: deviceInfo.UDN } }]);
+      }
+    });
+  };
+  
   socket.on('list_devices', (data, callback) => {
-    listDeviceCallback = callback
-  });
-
-  Homey.app.discover(deviceInfo => {
-    if (deviceInfo.deviceType === Homey.app.DEVICE_TYPE.Switch &&
-      devices.findIndex(knownDevice => knownDevice.UDN === deviceInfo.UDN) === -1
-    ) {
-      clearTimeout(noDeviceTimeout);
-      socket.emit('list_devices', [{ name: deviceInfo.friendlyName, data: { id: deviceInfo.UDN } }]);
-    }
+    listDeviceCallback = callback;
+    discover();
   });
 
   socket.on('add_device', (newDevice) => {
@@ -65,7 +71,6 @@ function pair(socket) {
 function getOnOff(deviceInfo, callback) {
   waitForDevice(deviceInfo).then(device => {
     device.getBinaryState((err, result) => {
-      console.log(err, result);
       if (err) {
         const self = this || {};
         Homey.app.retry.call(

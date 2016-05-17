@@ -46,7 +46,7 @@ function pair(socket) {
   let listDeviceCallback;
   const noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 10000);
   const newDevices = [];
-  let foundDevices;
+  const foundDevices = [];
 
   const getDeviceObject = (deviceInfo, UDN) => {
     return {
@@ -59,46 +59,51 @@ function pair(socket) {
     }
   };
 
-  Object.keys(Homey.app.clients).forEach(clientKey => {
-    const client = Homey.app.clients[clientKey];
-    if (client && client.deviceType === Homey.app.DEVICE_TYPE.Bridge) {
-      client.getEndDevices((err, endDevices) => {
-        if (!err && endDevices) {
-          foundDevices = endDevices
+  const discover = () => {
+    Object.keys(Homey.app.clients).forEach(clientKey => {
+      const client = Homey.app.clients[clientKey];
+      if (client && client.deviceType === Homey.app.DEVICE_TYPE.Bridge) {
+        client.getEndDevices((err, endDevices) => {
+          if (!err && endDevices) {
+            const newDevices = endDevices
+              .filter(endDevice => endDevice.deviceType === 'dimmableLight' && !getEndDevice({
+                UDN: client.UDN,
+                deviceId: endDevice.deviceId
+              }) && !foundDevices.find(foundDevice => foundDevice.data.deviceId === endDevice.deviceId && foundDevice.data.UDN === client.UDN))
+              .map(endDevice => getDeviceObject(endDevice, client.UDN));
+            if (newDevices.length) {
+              clearTimeout(noDeviceTimeout);
+              socket.emit('list_devices', newDevices);
+              foundDevices.concat(newDevices);
+            }
+          }
+        });
+      }
+    });
+
+    Homey.app.discover(deviceInfo => {
+      if (deviceInfo.deviceType === Homey.app.DEVICE_TYPE.Bridge) {
+        const client = Homey.app.wemo.client(deviceInfo);
+        client.getEndDevices((err, endDevices) => {
+          const newDevices = endDevices
             .filter(endDevice => endDevice.deviceType === 'dimmableLight' && !getEndDevice({
               UDN: client.UDN,
               deviceId: endDevice.deviceId
-            }))
+            }) && !foundDevices.find(foundDevice => foundDevice.data.deviceId === endDevice.deviceId && foundDevice.data.UDN === client.UDN))
             .map(endDevice => getDeviceObject(endDevice, client.UDN));
-          if (foundDevices.length) {
+          if (newDevices.length) {
             clearTimeout(noDeviceTimeout);
-            socket.emit('list_devices', foundDevices);
+            socket.emit('list_devices', newDevices);
+            foundDevices.concat(newDevices);
           }
-        }
-      });
-    }
-  });
-
-  Homey.app.discover(deviceInfo => {
-    if (deviceInfo.deviceType === Homey.app.DEVICE_TYPE.Bridge) {
-      const client = Homey.app.wemo.client(deviceInfo);
-      client.getEndDevices((err, endDevices) => {
-        foundDevices = endDevices
-          .filter(endDevice => endDevice.deviceType === 'dimmableLight' && !getEndDevice({
-            UDN: client.UDN,
-            deviceId: endDevice.deviceId
-          }))
-          .map(endDevice => getDeviceObject(endDevice, client.UDN));
-        if (foundDevices.length) {
-          clearTimeout(noDeviceTimeout);
-          socket.emit('list_devices', foundDevices);
-        }
-      });
-    }
-  });
+        });
+      }
+    });
+  };
 
   socket.on('list_devices', (data, callback) => {
     listDeviceCallback = callback;
+    discover();
   });
 
   socket.on('add_device', (newDevice) => {
