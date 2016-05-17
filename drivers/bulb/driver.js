@@ -44,7 +44,7 @@ function deleted(deviceInfo) {
 
 function pair(socket) {
   let listDeviceCallback;
-  const noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 10000);
+  let noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 10000);
   const newDevices = [];
   const foundDevices = [];
 
@@ -55,6 +55,18 @@ function pair(socket) {
         id: `${UDN}:${deviceInfo.deviceId}`,
         UDN,
         deviceId: deviceInfo.deviceId
+      }
+    }
+  };
+
+  const emit = (newDevices) => {
+    if (newDevices.length) {
+      if (noDeviceTimeout) {
+        clearTimeout(noDeviceTimeout);
+        noDeviceTimeout = null;
+        listDeviceCallback(null, newDevices);
+      } else {
+        socket.emit('list_devices', newDevices)
       }
     }
   };
@@ -72,8 +84,7 @@ function pair(socket) {
               }) && !foundDevices.find(foundDevice => foundDevice.data.deviceId === endDevice.deviceId && foundDevice.data.UDN === client.UDN))
               .map(endDevice => getDeviceObject(endDevice, client.UDN));
             if (newDevices.length) {
-              clearTimeout(noDeviceTimeout);
-              socket.emit('list_devices', newDevices);
+              emit(newDevices);
               foundDevices.concat(newDevices);
             }
           }
@@ -92,8 +103,7 @@ function pair(socket) {
             }) && !foundDevices.find(foundDevice => foundDevice.data.deviceId === endDevice.deviceId && foundDevice.data.UDN === client.UDN))
             .map(endDevice => getDeviceObject(endDevice, client.UDN));
           if (newDevices.length) {
-            clearTimeout(noDeviceTimeout);
-            socket.emit('list_devices', newDevices);
+            emit(newDevices);
             foundDevices.concat(newDevices);
           }
         });
@@ -168,7 +178,7 @@ function setOnOff(deviceInfo, state, callback) {
       deviceInfo.deviceId,
       state && endDevice.status && endDevice.status['10008'] ? 10008 : 10006,  // Because of a bug in the belkin bulbs we set the brightness value to turn on them on
       state && endDevice.status && endDevice.status['10008'] ?
-        endDevice.status['10008'].split(':')[0] || 255 + ':0' :
+      endDevice.status['10008'].split(':')[0] || 255 + ':0' :
         state ? '1' : '0',
       err => {
         if (err) {

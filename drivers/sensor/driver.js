@@ -37,9 +37,21 @@ function deleted(deviceInfo) {
 
 function pair(socket) {
   let listDeviceCallback;
+  let noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 10000);
   const foundUDNList = [];
-  const noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 10000);
 
+  const emit = (newDevices) => {
+    if (newDevices.length) {
+      if (noDeviceTimeout) {
+        clearTimeout(noDeviceTimeout);
+        noDeviceTimeout = null;
+        listDeviceCallback(null, newDevices);
+      } else {
+        socket.emit('list_devices', newDevices)
+      }
+    }
+  };
+  
   const discover = () => {
     Homey.app.discover(deviceInfo => {
       if (deviceInfo.deviceType === Homey.app.DEVICE_TYPE.Motion &&
@@ -48,7 +60,7 @@ function pair(socket) {
       ) {
         clearTimeout(noDeviceTimeout);
         foundUDNList.push(deviceInfo.UDN);
-        socket.emit('list_devices', [{ name: deviceInfo.friendlyName, data: { id: deviceInfo.UDN } }]);
+        emit([{ name: deviceInfo.friendlyName, data: { id: deviceInfo.UDN } }]);
       }
     });
   };
