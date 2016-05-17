@@ -167,7 +167,7 @@ function createConnection(deviceInfo) {
       (state, power) => {
         power = state === 0 ? 0 : power / 1000;
         device.lastPowerValue = power;
-        if (Homey.app.dedupeUpdate(device, 'measure_power', value)) {
+        if (Homey.app.dedupeUpdate(device, 'measure_power', power)) {
           module.exports.realtime(deviceInfo, 'measure_power', power);
         }
       }
