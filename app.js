@@ -25,24 +25,10 @@ function getConnection(device) {
   })
 }
 
-let discoverCache = null;
-let callbackCache = [];
 function discover(callback) {
-  callbackCache.push(callback);
-
-  if (discoverCache === null) {
-    discoverCache = [];
-    wemo.discover(deviceInfo => {
-      callbackCache.forEach(cb => cb(deviceInfo));
-      discoverCache.push(deviceInfo);
-    });
-    setTimeout(() => {
-      discoverCache = null;
-      callbackCache = [];
-    }, 5000);
-  } else {
-    discoverCache.forEach(deviceInfo => callback(deviceInfo));
-  }
+  wemo.discover(deviceInfo => {
+    callback(deviceInfo);
+  });
 }
 
 function disconnect(device) {
