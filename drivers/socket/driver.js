@@ -78,7 +78,7 @@ function getOnOff(deviceInfo, callback) {
         );
       }
       if (Homey.app.dedupeUpdate(device, 'onoff', result !== '0')) {
-        module.exports.realtime(deviceInfo, 'onoff', result !== '0')
+        module.exports.realtime(deviceInfo, 'onoff', result !== '0');
       }
       callback(err, result !== '0')
     });
@@ -102,7 +102,7 @@ function setOnOff(deviceInfo, state, callback) {
         );
       } else {
         if (Homey.app.dedupeUpdate(device, 'onoff', result.BinaryState !== '0')) {
-          module.exports.realtime(deviceInfo, 'onoff', result.BinaryState !== '0')
+          module.exports.realtime(deviceInfo, 'onoff', result.BinaryState !== '0');
         }
         callback(null, result.BinaryState !== '0');
       }

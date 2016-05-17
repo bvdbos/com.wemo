@@ -144,6 +144,9 @@ function getOnOff(deviceInfo, callback) {
             getOnOff.bind(self, deviceInfo, callback)
           );
         } else {
+          if (Homey.app.dedupeUpdate(endDevice, '10006', result['10006'])) {
+            module.exports.realtime(deviceInfo, 'onoff', result['10006'] !== '0');
+          }
           callback(err, result['10006'] !== '0');
         }
       });

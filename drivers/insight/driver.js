@@ -78,7 +78,10 @@ function getOnOff(deviceInfo, callback) {
         );
       }
       if (Homey.app.dedupeUpdate(device, 'onoff', result[0] !== '0')) {
-        module.exports.realtime(deviceInfo, 'onoff', result[0] !== '0')
+        module.exports.realtime(deviceInfo, 'onoff', result[0] !== '0');
+        if(!newState){
+          module.exports.realtime(deviceInfo, 'measure_power', 0);
+        }
       }
       callback(err, result[0] !== '0')
     });
@@ -101,10 +104,14 @@ function setOnOff(deviceInfo, state, callback) {
           setOnOff.bind(self, deviceInfo, state, callback)
         );
       } else {
-        if (Homey.app.dedupeUpdate(device, 'onoff', result.BinaryState[0] !== '0')) {
-          module.exports.realtime(deviceInfo, 'onoff', result.BinaryState[0] !== '0')
+        const newState = result.BinaryState[0] !== '0';
+        if (Homey.app.dedupeUpdate(device, 'onoff', newState)) {
+          module.exports.realtime(deviceInfo, 'onoff', newState);
+          if(!newState){
+            module.exports.realtime(deviceInfo, 'measure_power', 0);
+          }
         }
-        callback(null, result.BinaryState[0] !== '0');
+        callback(null, newState);
       }
     });
   }).catch(err => {
