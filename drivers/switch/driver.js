@@ -37,7 +37,7 @@ function deleted(deviceInfo) {
 
 function pair(socket) {
   let listDeviceCallback;
-  const noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 5000);
+  const noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 10000);
 
   socket.on('list_devices', (data, callback) => {
     listDeviceCallback = callback
@@ -56,7 +56,10 @@ function pair(socket) {
     devices.push(newDevice.data);
   });
 
-  socket.on('disconnect', connect);
+  socket.on('disconnect', () => {
+    clearTimeout(noDeviceTimeout);
+    connect();
+  });
 }
 
 function getOnOff(deviceInfo, callback) {
@@ -73,7 +76,10 @@ function getOnOff(deviceInfo, callback) {
           getOnOff.bind(self, deviceInfo, callback)
         );
       }
-      callback(err, result === '1')
+      if (Homey.app.dedupeUpdate(device, 'onoff', result !== '0')) {
+        module.exports.realtime(deviceInfo, 'onoff', result !== '0')
+      }
+      callback(err, result !== '0')
     });
   })
 }
@@ -89,7 +95,10 @@ function setOnOff(deviceInfo, state, callback) {
           setOnOff.bind(self, deviceInfo, state, callback)
         );
       } else {
-        callback(null, result.BinaryState === '1');
+        if (Homey.app.dedupeUpdate(device, 'onoff', result.BinaryState !== '0')) {
+          module.exports.realtime(deviceInfo, 'onoff', result.BinaryState !== '0')
+        }
+        callback(null, result.BinaryState !== '0');
       }
     });
   });
@@ -136,8 +145,8 @@ function createConnection(deviceInfo) {
     });
 
     device.on('binaryState', value => {
-      if (Homey.app.dedupeUpdate(device, 'onoff', value)) {
-        module.exports.realtime(deviceInfo, 'onoff', value === '1')
+      if (Homey.app.dedupeUpdate(device, 'onoff', value !== '0')) {
+        module.exports.realtime(deviceInfo, 'onoff', value !== '0')
       }
     });
 

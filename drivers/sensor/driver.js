@@ -37,7 +37,7 @@ function deleted(deviceInfo) {
 
 function pair(socket) {
   let listDeviceCallback;
-  const noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 5000);
+  const noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 10000);
 
   socket.on('list_devices', (data, callback) => {
     listDeviceCallback = callback
@@ -56,7 +56,10 @@ function pair(socket) {
     devices.push(newDevice.data);
   });
 
-  socket.on('disconnect', connect);
+  socket.on('disconnect', () => {
+    clearTimeout(noDeviceTimeout);
+    connect();
+  });
 }
 
 function getState(deviceInfo, callback) {

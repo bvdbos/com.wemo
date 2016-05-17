@@ -44,7 +44,7 @@ function deleted(deviceInfo) {
 
 function pair(socket) {
   let listDeviceCallback;
-  const noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 5000);
+  const noDeviceTimeout = setTimeout(() => listDeviceCallback && listDeviceCallback(null, []), 10000);
   const newDevices = [];
   let foundDevices;
 
@@ -107,6 +107,7 @@ function pair(socket) {
   });
 
   socket.on('disconnect', () => {
+    clearTimeout(noDeviceTimeout);
     const UDNList = [];
     newDevices.filter(deviceInfo => {
       if (UDNList.indexOf(deviceInfo.UDN) === -1) {
