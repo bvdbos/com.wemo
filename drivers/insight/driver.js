@@ -167,7 +167,8 @@ function createConnection(deviceInfo) {
     // TODO revise code below
     // Hacky way to check if the driver lost connection while polling
     let connectionLostTimeout;
-    device.subscriptions.__defineSetter__('urn:Belkin:service:insight:1', function (val) {
+    device.subscriptions._subscriptionCheckValue = device.subscriptions['urn:Belkin:service:basicevent:1'];
+    device.subscriptions.__defineSetter__('urn:Belkin:service:basicevent:1', function (val) {
       this._subscriptionCheckValue = val;
       if (val === null) {
         if (device.callbackURL && !connectionLostTimeout) {
@@ -182,7 +183,7 @@ function createConnection(deviceInfo) {
         module.exports.setAvailable(deviceInfo)
       }
     });
-    device.subscriptions.__defineGetter__('urn:Belkin:service:insight:1', function () {
+    device.subscriptions.__defineGetter__('urn:Belkin:service:basicevent:1', function () {
       return this._subscriptionCheckValue;
     });
 

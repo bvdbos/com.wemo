@@ -274,6 +274,7 @@ function createConnection(deviceInfo) {
     // TODO revise code below
     // Hacky way to check if the driver lost connection while polling
     let connectionLostTimeout;
+    device.subscriptions._subscriptionCheckValue = device.subscriptions['urn:Belkin:service:bridge:1'];
     device.subscriptions.__defineSetter__('urn:Belkin:service:bridge:1', function (val) {
       this._subscriptionCheckValue = val;
       if (!device.callbackURL) { // callbackURL is manually deleted by app.js:disconnect when device is disconnected
