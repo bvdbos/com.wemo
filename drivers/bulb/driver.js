@@ -167,6 +167,7 @@ function getOnOff(deviceInfo, callback) {
       });
     }
   }).catch(err => {
+    Homey.error(err, err.stack);
     callback(err);
   });
 }
@@ -200,6 +201,7 @@ function setOnOff(deviceInfo, state, callback) {
       }
     );
   }).catch(err => {
+    Homey.error(err, err.stack);
     callback(err);
   });
 }
@@ -222,6 +224,7 @@ function getDim(deviceInfo, callback) {
       }
     });
   }).catch(err => {
+    Homey.error(err, err.stack);
     callback(err);
   });
 }
@@ -248,6 +251,7 @@ function setDim(deviceInfo, state, callback) {
       }
     });
   }).catch(err => {
+    Homey.error(err, err.stack);
     callback(err);
   });
 }
@@ -317,6 +321,7 @@ function createConnection(deviceInfo) {
     });
 
   }).catch(err => {
+    Homey.error(err, err.stack);
     return new Promise((resolve, reject) => {
       Homey.app.retry.call(self, deviceInfo, reject, () => resolve(createConnection.call(self, deviceInfo)));
     });
@@ -337,6 +342,7 @@ function checkEndDevices(device) {
 }
 
 function getEndDevice(deviceInfo) {
+  Homey.error(err, err.stack);
   return devices.find(endDevice => deviceInfo.deviceId === endDevice.deviceId && deviceInfo.UDN === endDevice.UDN);
 }
 

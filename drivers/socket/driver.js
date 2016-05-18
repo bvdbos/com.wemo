@@ -100,6 +100,7 @@ function getOnOff(deviceInfo, callback) {
       callback(err, result !== '0')
     });
   }).catch(err => {
+    Homey.error(err, err.stack);
     callback(err);
   });
 }
@@ -124,6 +125,9 @@ function setOnOff(deviceInfo, state, callback) {
         callback(null, result.BinaryState !== '0');
       }
     });
+  }).catch(err => {
+    Homey.error(err, err.stack);
+    callback(err);
   });
 }
 
@@ -177,6 +181,7 @@ function createConnection(deviceInfo) {
     });
 
   }).catch(err => {
+    Homey.error(err, err.stack);
     return new Promise((resolve, reject) => {
       Homey.app.retry.call(self, deviceInfo, reject, () => resolve(createConnection.call(self, deviceInfo)));
     });
