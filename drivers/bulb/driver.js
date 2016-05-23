@@ -342,7 +342,6 @@ function checkEndDevices(device) {
 }
 
 function getEndDevice(deviceInfo) {
-  Homey.error(err, err.stack);
   return devices.find(endDevice => deviceInfo.deviceId === endDevice.deviceId && deviceInfo.UDN === endDevice.UDN);
 }
 
