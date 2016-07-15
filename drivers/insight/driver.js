@@ -96,7 +96,7 @@ function getOnOff(deviceInfo, callback) {
       }
       if (Homey.app.dedupeUpdate(device, 'onoff', result[0] !== '0')) {
         module.exports.realtime(deviceInfo, 'onoff', result[0] !== '0');
-        if(!newState){
+        if(result[0] === '0'){
           module.exports.realtime(deviceInfo, 'measure_power', 0);
         }
       }
