@@ -7,3 +7,8 @@ This app supports:
 * Belkin WeMo Switch
 * Belkin WeMo Light Switch
 * Belkin WeMo Motion Sensor
+
+##What's new
+
+####v2.1.1
+Stability should be much improved with this version. If you still experience issues (devices that stop working after a couple of days) please submit an issue on github.

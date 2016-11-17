@@ -1,7 +1,7 @@
 'use strict';
 const Wemo = require('wemo-client');
+const WemoClient = require('wemo-client/client');
 const wemo = new Wemo();
-
 
 function init() {
 }
@@ -11,11 +11,27 @@ function getConnection(device) {
 		const UDN = device.UDN || device.id;
 
 		if (!wemo._clients[UDN]) {
-			const notFound = setTimeout(reject.bind(null, 'Could not find device'), 5000);
+			const notFound = setTimeout(reject.bind(null, 'Could not find device', device), 5000);
 			discover(deviceInfo => {
 				if (deviceInfo.UDN === UDN) {
 					clearTimeout(notFound);
-					resolve(wemo.client(deviceInfo));
+					const client = wemo.client(deviceInfo);
+					setTimeout(() => {
+					}, 1000);
+					client.on('error', (err) => {
+						console.log('[Wemo][Error]', err);
+
+						// reapply listeners
+						const dummyFunc = (() => null);
+						Object.keys(WemoClient.EventServices).forEach(eventName => {
+							if(client.listeners(eventName).length){
+								client.once(eventName, dummyFunc);
+								console.log('reapplied', eventName, 'listener');
+								setTimeout(() => client.removeListener(eventName, dummyFunc), 1000);
+							}
+						});
+					});
+					resolve(client);
 				}
 			});
 		} else {
@@ -30,7 +46,7 @@ function discover(callback) {
 	for (let i = 0; i < 10; i++) {
 		setTimeout(
 			wemo.discover(deviceInfo => {
-					if(foundDevices.indexOf(deviceInfo.UDN) === -1){
+					if (foundDevices.indexOf(deviceInfo.UDN) === -1) {
 						foundDevices.push(deviceInfo.UDN);
 						callback(deviceInfo);
 					}
