@@ -16,8 +16,6 @@ function getConnection(device) {
 				if (deviceInfo.UDN === UDN) {
 					clearTimeout(notFound);
 					const client = wemo.client(deviceInfo);
-					setTimeout(() => {
-					}, 1000);
 					client.on('error', (err) => {
 						console.log('[Wemo][Error]', err);
 
@@ -35,8 +33,7 @@ function getConnection(device) {
 				}
 			});
 		} else {
-			device.UDN = UDN;
-			resolve(wemo.client(device));
+			resolve(wemo._clients[UDN]);
 		}
 	})
 }
