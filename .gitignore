@@ -2,3 +2,4 @@
 # Exclude jetbrains config files
 .idea
 .DS_Store
+env.json

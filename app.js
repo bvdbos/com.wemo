@@ -1,4 +1,6 @@
 'use strict';
+
+const logger = require('homey-log').Log;
 const Wemo = require('wemo-client');
 const WemoClient = require('wemo-client/client');
 const wemo = new Wemo();
