@@ -1,10 +1,12 @@
 'use strict';
 
 let devices = [];
+let deviceObjects = [];
 let connectionTimeout = 7500;
 
 function init(deviceList, callback) {
-	devices = deviceList || [];
+	devices.concat(deviceList.slice());
+	deviceObjects.concat(deviceList);
 
 	connect();
 
@@ -39,6 +41,7 @@ function disconnect(deviceInfo) {
 
 function deleted(deviceInfo) {
 	devices = devices.filter(device => device.id !== deviceInfo.id);
+	deviceObjects = deviceObjects.filter(device => device.id !== deviceInfo.id);
 	disconnect(deviceInfo);
 }
 
@@ -118,6 +121,7 @@ function pair(socket) {
 
 	socket.on('add_device', (newDevice) => {
 		devices.push(newDevice.data);
+		deviceObjects.push(newDevice.data);
 		newDevices.push(newDevice.data);
 	});
 
@@ -160,7 +164,7 @@ function getOnOff(deviceInfo, callback) {
 					);
 				} else {
 					if (Homey.app.dedupeUpdate(endDevice, '10006', result['10006'])) {
-						module.exports.realtime(deviceInfo, 'onoff', result['10006'] !== '0');
+						module.exports.realtime(getDeviceObject(endDevice), 'onoff', result['10006'] !== '0');
 					}
 					callback(err, result['10006'] !== '0');
 				}
@@ -194,7 +198,7 @@ function setOnOff(deviceInfo, state, callback) {
 					);
 				} else {
 					if (Homey.app.dedupeUpdate(endDevice, '10006', state ? '1' : '0')) {
-						module.exports.realtime(deviceInfo, 'onoff', state);
+						module.exports.realtime(getDeviceObject(endDevice), 'onoff', state);
 					}
 					callback(null, state);
 				}
@@ -245,7 +249,7 @@ function setDim(deviceInfo, state, callback) {
 			} else {
 				const endDevice = getEndDevice(deviceInfo);
 				if (Homey.app.dedupeUpdate(endDevice, '10006', '1')) {
-					module.exports.realtime(deviceInfo, 'onoff', true);
+					module.exports.realtime(getDeviceObject(endDevice), 'onoff', true);
 				}
 				callback(null, state);
 			}
@@ -308,13 +312,13 @@ function createConnection(deviceInfo) {
 			if (endDevice) {
 				module.exports.setAvailable(endDevice);
 				if (capabilityId === '10006' && Homey.app.dedupeUpdate(endDevice, capabilityId, value)) {
-					module.exports.realtime(endDevice, 'onoff', value !== '0');
+					module.exports.realtime(getDeviceObject(endDevice), 'onoff', value !== '0');
 				} else if (capabilityId === '10008') {
 					if (Homey.app.dedupeUpdate(endDevice, '10006', '1')) {
-						module.exports.realtime(endDevice, 'onoff', true);
+						module.exports.realtime(getDeviceObject(endDevice), 'onoff', true);
 					}
 					if (Homey.app.dedupeUpdate(endDevice, capabilityId, value)) {
-						module.exports.realtime(endDevice, 'dim', value.split(':')[0] / 255);
+						module.exports.realtime(getDeviceObject(endDevice), 'dim', value.split(':')[0] / 255);
 					}
 				}
 			}
@@ -343,6 +347,10 @@ function checkEndDevices(device) {
 
 function getEndDevice(deviceInfo) {
 	return devices.find(endDevice => deviceInfo.deviceId === endDevice.deviceId && deviceInfo.UDN === endDevice.UDN);
+}
+
+function getDeviceObject(deviceInfo) {
+	return deviceObjects.find(deviceObject => deviceInfo.deviceId === deviceObject.deviceId && deviceInfo.UDN === deviceObject.UDN);
 }
 
 const capabilities = {

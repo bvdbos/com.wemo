@@ -1,10 +1,12 @@
 'use strict';
 
-let devices;
+let devices = [];
+let deviceObjects = [];
 let connectionTimeout = 7500;
 
 function init(deviceList, callback) {
-	devices = deviceList || [];
+	devices.concat(deviceList.slice());
+	deviceObjects.concat(deviceList);
 
 	connect();
 
@@ -32,6 +34,7 @@ function disconnect(deviceInfo) {
 
 function deleted(deviceInfo) {
 	devices = devices.filter(device => device.id !== deviceInfo.id);
+	deviceObjects = deviceObjects.filter(device => device.id !== deviceInfo.id);
 	disconnect(deviceInfo);
 }
 
@@ -72,6 +75,7 @@ function pair(socket) {
 
 	socket.on('add_device', (newDevice) => {
 		devices.push(newDevice.data);
+		deviceObjects.push(newDevice.data);
 	});
 
 	socket.on('disconnect', () => {
@@ -95,9 +99,9 @@ function getOnOff(deviceInfo, callback) {
 				);
 			}
 			if (Homey.app.dedupeUpdate(device, 'onoff', result[0] !== '0')) {
-				module.exports.realtime(deviceInfo, 'onoff', result[0] !== '0');
+				module.exports.realtime(getDeviceObject(deviceInfo), 'onoff', result[0] !== '0');
 				if (result[0] === '0') {
-					module.exports.realtime(deviceInfo, 'measure_power', 0);
+					module.exports.realtime(getDeviceObject(deviceInfo), 'measure_power', 0);
 				}
 			}
 			callback(err, result[0] !== '0')
@@ -124,9 +128,9 @@ function setOnOff(deviceInfo, state, callback) {
 			} else {
 				const newState = result.BinaryState[0] !== '0';
 				if (Homey.app.dedupeUpdate(device, 'onoff', newState)) {
-					module.exports.realtime(deviceInfo, 'onoff', newState);
+					module.exports.realtime(getDeviceObject(deviceInfo), 'onoff', newState);
 					if (!newState) {
-						module.exports.realtime(deviceInfo, 'measure_power', 0);
+						module.exports.realtime(getDeviceObject(deviceInfo), 'measure_power', 0);
 					}
 				}
 				callback(null, newState);
@@ -191,10 +195,10 @@ function createConnection(deviceInfo) {
 
 		device.on('binaryState', value => {
 			if (value[0] === '0') {
-				module.exports.realtime(deviceInfo, 'measure_power', 0);
+				module.exports.realtime(getDeviceObject(deviceInfo), 'measure_power', 0);
 			}
 			if (Homey.app.dedupeUpdate(device, 'onoff', value[0] !== '0')) {
-				module.exports.realtime(deviceInfo, 'onoff', value[0] !== '0')
+				module.exports.realtime(getDeviceObject(deviceInfo), 'onoff', value[0] !== '0')
 			}
 		});
 
@@ -203,7 +207,7 @@ function createConnection(deviceInfo) {
 			(state, power) => {
 				power = state === 0 ? 0 : power / 1000;
 				device.lastPowerValue = power;
-				module.exports.realtime(deviceInfo, 'measure_power', power);
+				module.exports.realtime(getDeviceObject(deviceInfo), 'measure_power', power);
 			}
 		);
 	}).catch(err => {
@@ -212,6 +216,10 @@ function createConnection(deviceInfo) {
 			Homey.app.retry.call(self, deviceInfo, reject, () => resolve(createConnection.call(self, deviceInfo)));
 		});
 	});
+}
+
+function getDeviceObject(deviceInfo) {
+	return deviceObjects.find(deviceObject => deviceInfo.deviceId === deviceObject.deviceId);
 }
 
 const capabilities = {

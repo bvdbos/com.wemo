@@ -19,6 +19,10 @@ function getConnection(device) {
 					clearTimeout(notFound);
 					const client = wemo.client(deviceInfo);
 					client.on('error', (err) => {
+						if(client.disconnected || !wemo._clients[deviceInfo.UDN] || !client.callbackUrl){
+							// Swallow errors of devices that have been disconnected by this app
+							return;
+						}
 						console.log('[Wemo][Error]', err);
 
 						// reapply listeners
@@ -60,6 +64,7 @@ function disconnect(device) {
 	device.callbackURL = null;
 	const client = wemo._clients[device.UDN || device.id];
 	if (client) {
+		client.disconnected = true;
 		client.callbackURL = null; //Remove callback url so listeners will automatically stop
 		wemo._clients[client.UDN] = null; //Remove device from connected clients
 	}

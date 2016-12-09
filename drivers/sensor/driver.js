@@ -1,6 +1,7 @@
 'use strict';
 
-let devices;
+let devices = [];
+let deviceObjects = [];
 let connectionTimeout = 7500;
 
 function init(deviceList, callback) {
@@ -32,6 +33,7 @@ function disconnect(deviceInfo) {
 
 function deleted(deviceInfo) {
 	devices = devices.filter(device => device.id !== deviceInfo.id);
+	deviceObjects = deviceObjects.filter(device => device.id !== deviceInfo.id);
 	disconnect(deviceInfo);
 }
 
@@ -66,12 +68,13 @@ function pair(socket) {
 	};
 
 	socket.on('list_devices', (data, callback) => {
-		listDeviceCallback = callback
+		listDeviceCallback = callback;
 		discover();
 	});
 
 	socket.on('add_device', (newDevice) => {
 		devices.push(newDevice.data);
+		deviceObjects.push(newDevice.data);
 	});
 
 	socket.on('disconnect', () => {
@@ -145,7 +148,7 @@ function createConnection(deviceInfo) {
 
 		device.on('binaryState', value => {
 			if (Homey.app.dedupeUpdate(device, 'alarm_motion', value)) {
-				module.exports.realtime(deviceInfo, 'alarm_motion', value !== '0')
+				module.exports.realtime(getDeviceObject(deviceInfo), 'alarm_motion', value !== '0')
 			}
 		});
 
@@ -155,6 +158,10 @@ function createConnection(deviceInfo) {
 			Homey.app.retry.call(self, deviceInfo, reject, () => resolve(createConnection.call(self, deviceInfo)));
 		});
 	});
+}
+
+function getDeviceObject(deviceInfo) {
+	return deviceObjects.find(deviceObject => deviceInfo.deviceId === deviceObject.deviceId);
 }
 
 const capabilities = {
