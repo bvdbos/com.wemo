@@ -5,7 +5,8 @@ let deviceObjects = [];
 let connectionTimeout = 7500;
 
 function init(deviceList, callback) {
-	devices = deviceList || [];
+	devices.concat(deviceList.slice());
+	deviceObjects.concat(deviceList);
 
 	connect();
 

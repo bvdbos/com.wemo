@@ -85,6 +85,11 @@ function retry(callback, func) {
 }
 
 function dedupeUpdate(device, capabilityId, value) {
+	if(!device){
+		// FIXME check why device is undefined
+		logger.captureException(new Error('device is undefined'), { extra: { arguments: [device, capabilityId, value]}});
+		return true;
+	}
 	device.status = device.status || {};
 	if (device.status[capabilityId] === undefined) {
 		device.status[capabilityId] = value;
