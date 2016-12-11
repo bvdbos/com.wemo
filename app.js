@@ -109,6 +109,7 @@ module.exports = {
 	disconnect,
 	retry,
 	dedupeUpdate,
+	logger,
 	clients: wemo._clients,
 	DEVICE_TYPE: Wemo.DEVICE_TYPE,
 	wemo

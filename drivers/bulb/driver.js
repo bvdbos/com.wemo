@@ -40,8 +40,8 @@ function disconnect(deviceInfo) {
 }
 
 function deleted(deviceInfo) {
-	devices = devices.filter(device => device.id !== deviceInfo.id);
-	deviceObjects = deviceObjects.filter(device => device.id !== deviceInfo.id);
+	devices = devices.filter(device => device.id !== deviceInfo.id  && device.UDN !== deviceInfo.UDN);
+	deviceObjects = deviceObjects.filter(device => device.id !== deviceInfo.id && device.UDN !== deviceInfo.UDN);
 	disconnect(deviceInfo);
 }
 
@@ -346,7 +346,10 @@ function checkEndDevices(device) {
 }
 
 function getEndDevice(deviceInfo) {
-	return devices.find(endDevice => deviceInfo.deviceId === endDevice.deviceId && deviceInfo.UDN === endDevice.UDN);
+	const bulb = devices.find(endDevice => deviceInfo.deviceId === endDevice.deviceId && deviceInfo.UDN === endDevice.UDN);
+	if (!bulb) {
+		Homey.app.logger.captureException(new Error('cannot fine enddevice'), { extra: { devices: devices, deviceInfo: deviceInfo, deviceObjects: deviceObjects }});
+	}
 }
 
 function getDeviceObject(deviceInfo) {
