@@ -346,7 +346,7 @@ function checkEndDevices(device) {
 }
 
 function getEndDevice(deviceInfo) {
-	const bulb = devices.find(endDevice => deviceInfo.deviceId === endDevice.deviceId && deviceInfo.UDN === endDevice.UDN);
+	return devices.find(endDevice => deviceInfo.deviceId === endDevice.deviceId && deviceInfo.UDN === endDevice.UDN);
 }
 
 function getDeviceObject(deviceInfo) {
