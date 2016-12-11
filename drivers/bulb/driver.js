@@ -5,8 +5,8 @@ let deviceObjects = [];
 let connectionTimeout = 7500;
 
 function init(deviceList, callback) {
-	devices.concat(deviceList.slice());
-	deviceObjects.concat(deviceList);
+	devices = devices.concat(deviceList.slice());
+	deviceObjects = deviceObjects.concat(deviceList);
 
 	connect();
 
@@ -347,9 +347,6 @@ function checkEndDevices(device) {
 
 function getEndDevice(deviceInfo) {
 	const bulb = devices.find(endDevice => deviceInfo.deviceId === endDevice.deviceId && deviceInfo.UDN === endDevice.UDN);
-	if (!bulb) {
-		Homey.app.logger.captureException(new Error('cannot fine enddevice'), { extra: { devices: devices, deviceInfo: deviceInfo, deviceObjects: deviceObjects }});
-	}
 }
 
 function getDeviceObject(deviceInfo) {
