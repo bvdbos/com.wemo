@@ -19,7 +19,7 @@ function getConnection(device) {
 					clearTimeout(notFound);
 					const client = wemo.client(deviceInfo);
 					client.on('error', (err) => {
-						if(client.disconnected || !wemo._clients[deviceInfo.UDN] || !client.callbackUrl){
+						if (client.disconnected || !wemo._clients[deviceInfo.UDN] || !client.callbackUrl) {
 							// Swallow errors of devices that have been disconnected by this app
 							return;
 						}
@@ -28,7 +28,7 @@ function getConnection(device) {
 						// reapply listeners
 						const dummyFunc = (() => null);
 						Object.keys(WemoClient.EventServices).forEach(eventName => {
-							if(client.listeners(eventName).length){
+							if (client.listeners(eventName).length) {
 								client.once(eventName, dummyFunc);
 								console.log('reapplied', eventName, 'listener');
 								setTimeout(() => client.removeListener(eventName, dummyFunc), 1000);
@@ -48,7 +48,7 @@ function discover(callback) {
 	const foundDevices = [];
 	for (let i = 0; i < 10; i++) {
 		setTimeout(
-			wemo.discover(deviceInfo => {
+			() => wemo.discover(deviceInfo => {
 					if (foundDevices.indexOf(deviceInfo.UDN) === -1) {
 						foundDevices.push(deviceInfo.UDN);
 						callback(deviceInfo);
