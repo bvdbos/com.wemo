@@ -6,6 +6,14 @@ const WemoClient = require('wemo-client/client');
 const wemo = new Wemo();
 
 function init() {
+	// Initial discovery on app install to help users debug issues with device discovery
+	if (process.env.DEBUG === '1') {
+		console.log('[INFO] Discovering Devices...');
+		discover((device) => {
+			console.log('[INFO] Discovered Device:', require('util').inspect(device, { depth: 10 }));
+		});
+		setTimeout(() => console.log('[INFO] Discovering Devices Ended.'), 15000);
+	}
 }
 
 function getConnection(device) {
